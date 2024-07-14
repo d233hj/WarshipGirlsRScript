@@ -10,6 +10,7 @@ import json
 
 
 class Database:
+    "存储脚本运行信息，以便于在中断后继续上次的任务"
     _dataSrc = "./data/"
 
     def __init__(self) -> None:

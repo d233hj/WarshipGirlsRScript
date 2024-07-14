@@ -22,7 +22,7 @@ class WarshipGirl:
         pass
 
     def zhangshu20240712(self, times: int, map: str, continues=False):
-        "当期活动专用，出门点只打一次，刷战术"
+        "当期活动专用，出门点只打一次，刷战术 /n times :战斗次数 /n map :选择地图 /n continues :False或True 是否继续上次的任务"
         self._startTime__ = time.perf_counter()
         self._startTimeStr__ = datetime.datetime.now()
         try:
