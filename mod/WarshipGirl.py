@@ -1,11 +1,9 @@
 from tool.AdbTool import AdbTool
-import os
-import cv2
-from PIL import Image
 from tool.ImgMaster import ImgMaster
 import time
 import datetime
 from tool.Database import Database
+import func_timeout
 
 adbTool = AdbTool()
 imgMaster = ImgMaster()
@@ -42,47 +40,47 @@ class WarshipGirl:
         except BaseException as err:
             print(err)
         finally:
-
             self.selectMap(map)
-            while self._restTime__ > 0:
-                self.fightnomal()
-                while 1:
-                    if not self.fightnow():
-                        self._restTime__ = self._restTime__ - 1
-                        "存储任务进度，下次自动恢复"
-                        database.data.update(
-                            {
-                                "fightTime": self._fightTime__,
-                                "restTime": self._restTime__,
-                                "map": map,
-                                "runComplete": False,
-                            }
-                        )
-                        database.writeDb()
-                        "计算当前时间和开始时间，估计预期结束时间"
-                        timenow = time.perf_counter()
-                        costtime = timenow - self._startTime__
-                        futuretime = (
-                            float(self._restTime__)
-                            / (self._fightTime__ - self._restTime__)
-                        ) * costtime
+            self.fightnomal()
+            while 1:
+                if self._restTime__ <= 0:
+                    self.chetui()
+                    break
+                if not self.fightnow():
+                    self._restTime__ = self._restTime__ - 1
+                    "存储任务进度，下次自动恢复"
+                    database.data.update(
+                        {
+                            "fightTime": self._fightTime__,
+                            "restTime": self._restTime__,
+                            "map": map,
+                            "runComplete": False,
+                        }
+                    )
+                    database.writeDb()
+                    "计算当前时间和开始时间，估计预期结束时间"
+                    timenow = time.perf_counter()
+                    costtime = timenow - self._startTime__
+                    futuretime = (
+                        float(self._restTime__) / (self._fightTime__ - self._restTime__)
+                    ) * costtime
 
-                        hours = int(futuretime // 3600)
-                        minutes = int((futuretime % 3600) // 60)
-                        print(
-                            "========# All Times:"
-                            + str(self._fightTime__)
-                            + " | The restTimes:"
-                            + str(self._restTime__)
-                            + "|| StartTime: <"
-                            + str(self._startTimeStr__)
-                            + ">  PreTime: <"
-                            + str(hours)
-                            + "h"
-                            + str(minutes)
-                            + "m>  #========"
-                        )
-                        continue
+                    hours = int(futuretime // 3600)
+                    minutes = int((futuretime % 3600) // 60)
+                    print(
+                        "========# All Times:"
+                        + str(self._fightTime__)
+                        + " | The restTimes:"
+                        + str(self._restTime__)
+                        + "|| StartTime: <"
+                        + str(self._startTimeStr__)
+                        + ">  PreTime: <"
+                        + str(hours)
+                        + "h"
+                        + str(minutes)
+                        + "m>  #========"
+                    )
+                    continue
             database.data.update({"runComplete": True, "restTime": 0})
             database.writeDb()
 
@@ -216,6 +214,7 @@ class WarshipGirl:
             if adbTool.research_img(imgMaster.getImg("qianjin").getImg()):
                 break
 
+    @func_timeout.func_set_timeout(120)
     def chetui(self):
         while 1:
             if adbTool.research_img(imgMaster.getImg("jingjiQK").getImg()):

@@ -1,6 +1,6 @@
 {
-    "runComplete": false,
-    "fightTime": 114,
-    "restTime": 27,
+    "runComplete": true,
+    "fightTime": 200,
+    "restTime": 0,
     "map": "E2"
 }
