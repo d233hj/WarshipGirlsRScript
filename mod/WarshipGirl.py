@@ -89,6 +89,8 @@ class WarshipGirl:
     def selectMap(self, map):
         "选择地图和难度:E1,E2,E3..."
         map = "Map" + map
+        if adbTool.apper_to_click(imgMaster.getImg("huodonT").getImg(), "huodonT"):
+            pass
         for image in imgMaster._imgDict.keys():
             if adbTool.research_img(imgMaster.getImg(map).getImg()):
                 break
@@ -105,6 +107,8 @@ class WarshipGirl:
 
         while 1:
             "进入开始出征界面"
+            if adbTool.apper_to_click(imgMaster.getImg("huodonT").getImg(), "huodonT"):
+                continue
             if adbTool.apper_to_click(
                 imgMaster.getImg("jingjiQK").getImg(), "jingjiQK"
             ):
