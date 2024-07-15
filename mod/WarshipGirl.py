@@ -19,6 +19,29 @@ class WarshipGirl:
     def __init__(self) -> None:
         pass
 
+    def scriptMaster(self, times: int, map: str, continues=False):
+        while 1:
+            try:
+                if adbTool.device.app_wait(
+                    "com.huanmeng.zhanjian2", timeout=5, front=True
+                ):
+                    self.zhangshu20240712(times, map, continues)
+                else:
+                    raise RuntimeError("AppNotLive")
+            except BaseException as err:
+                print(err)
+                adbTool.device.app_stop("com.huanmeng.zhanjian2")
+                time.sleep(3)
+                adbTool.device.app_start("com.huanmeng.zhanjian2")
+                pid = adbTool.device.app_wait("com.huanmeng.zhanjian2", front=True)
+                while pid:
+                    if adbTool.apper_to_click(
+                        imgMaster.getImg("jinruYX").getImg(), "jinruYX"
+                    ):
+                        continue
+                    if adbTool.research_img(imgMaster.getImg("chuanwu").getImg()):
+                        break
+
     def zhangshu20240712(self, times: int, map: str, continues=False):
         "当期活动专用，出门点只打一次，刷战术 /n times :战斗次数 /n map :选择地图 /n continues :False或True 是否继续上次的任务"
         self._startTime__ = time.perf_counter()
@@ -41,49 +64,50 @@ class WarshipGirl:
             print(err)
         finally:
             self.selectMap(map)
-            self.fightnomal()
-            while 1:
-                if self._restTime__ <= 0:
-                    self.chetui()
+            while self._restTime__ > 0:
+                self.fightnomal()
+                while self._restTime__ > 0:
+                    if not self.fightnow():
+                        self._restTime__ = self._restTime__ - 1
+                        "存储任务进度，下次自动恢复"
+                        database.data.update(
+                            {
+                                "fightTime": self._fightTime__,
+                                "restTime": self._restTime__,
+                                "map": map,
+                                "runComplete": False,
+                            }
+                        )
+                        database.writeDb()
+                        "计算当前时间和开始时间，估计预期结束时间"
+                        timenow = time.perf_counter()
+                        costtime = timenow - self._startTime__
+                        futuretime = (
+                            float(self._restTime__)
+                            / (self._fightTime__ - self._restTime__)
+                        ) * costtime
+
+                        hours = int(futuretime // 3600)
+                        minutes = int((futuretime % 3600) // 60)
+                        print(
+                            "========# All Times:"
+                            + str(self._fightTime__)
+                            + " | The restTimes:"
+                            + str(self._restTime__)
+                            + "|| StartTime: <"
+                            + str(self._startTimeStr__)
+                            + ">  PreTime: <"
+                            + str(hours)
+                            + "h"
+                            + str(minutes)
+                            + "m>  #========"
+                        )
+                        continue
                     break
-                if not self.fightnow():
-                    self._restTime__ = self._restTime__ - 1
-                    "存储任务进度，下次自动恢复"
-                    database.data.update(
-                        {
-                            "fightTime": self._fightTime__,
-                            "restTime": self._restTime__,
-                            "map": map,
-                            "runComplete": False,
-                        }
-                    )
-                    database.writeDb()
-                    "计算当前时间和开始时间，估计预期结束时间"
-                    timenow = time.perf_counter()
-                    costtime = timenow - self._startTime__
-                    futuretime = (
-                        float(self._restTime__) / (self._fightTime__ - self._restTime__)
-                    ) * costtime
+                database.data.update({"runComplete": True, "restTime": 0})
+                database.writeDb()
 
-                    hours = int(futuretime // 3600)
-                    minutes = int((futuretime % 3600) // 60)
-                    print(
-                        "========# All Times:"
-                        + str(self._fightTime__)
-                        + " | The restTimes:"
-                        + str(self._restTime__)
-                        + "|| StartTime: <"
-                        + str(self._startTimeStr__)
-                        + ">  PreTime: <"
-                        + str(hours)
-                        + "h"
-                        + str(minutes)
-                        + "m>  #========"
-                    )
-                    continue
-            database.data.update({"runComplete": True, "restTime": 0})
-            database.writeDb()
-
+    @func_timeout.func_set_timeout(2 * 60)
     def selectMap(self, map):
         "选择地图和难度:E1,E2,E3..."
         map = "Map" + map
@@ -100,6 +124,7 @@ class WarshipGirl:
                 while adbTool.apper_to_click(imgMaster.getImg("MapLeft").getImg()):
                     pass
 
+    @func_timeout.func_set_timeout(5 * 60)
     def fightnomal(self):
         "战斗内逻辑，处理出征前进撤退"
 
@@ -155,11 +180,16 @@ class WarshipGirl:
             if adbTool.research_img(imgMaster.getImg("qianjin").getImg()):
                 break
 
+    @func_timeout.func_set_timeout(5 * 60)
     def fightnow(self, night=False):
         "出征中，不可修理"
         while 1:
             "正常出征进入战斗"
             if adbTool.apper_to_click(imgMaster.getImg("qianjin").getImg(), "qianjin"):
+                continue
+            if adbTool.apper_to_click(
+                imgMaster.getImg("kaishiZD").getImg(), "kaishiZD"
+            ):
                 continue
             if adbTool.research_img(
                 imgMaster.getImg("kaishiCZ").getImg(),
@@ -182,7 +212,10 @@ class WarshipGirl:
                 imgMaster.getImg("kaishiCZ").getImg(), "kaishiCZ"
             ):
                 continue
-
+            if adbTool.apper_to_click(
+                imgMaster.getImg("kaishiZD").getImg(), "kaishiZD"
+            ):
+                continue
             if adbTool.research_img(imgMaster.getImg("zhen").getImg()):
                 break
 
@@ -213,6 +246,7 @@ class WarshipGirl:
                 continue
             if adbTool.research_img(imgMaster.getImg("qianjin").getImg()):
                 break
+        return False
 
     @func_timeout.func_set_timeout(120)
     def chetui(self):
